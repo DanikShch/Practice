@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-products-table
+      author: dev
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: products
+        - tableExists:
+            tableName: categories
+      changes:
+        - createTable:
+            tableName: products
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: price
+                  type: DECIMAL(10,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: stock_quantity
+                  type: INTEGER
+                  defaultValue: 0
+              - column:
+                  name: category_id
+                  type: UUID
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+        - addForeignKeyConstraint:
+            baseTableName: products
+            baseColumnNames: category_id
+            constraintName: fk_product_category
+            referencedTableName: categories
+            referencedColumnNames: id
+
+        - createIndex:
+            indexName: idx_product_name
+            tableName: products
+            columns:
+              - column:
+                  name: name
+                  type: VARCHAR(255)

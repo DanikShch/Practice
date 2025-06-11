@@ -1,0 +1,80 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-carts-table
+      author: dev
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: carts
+        - tableExists:
+            tableName: users
+      changes:
+        - createTable:
+            tableName: carts
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: user_id
+                  type: UUID
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+        - addForeignKeyConstraint:
+            baseTableName: carts
+            baseColumnNames: user_id
+            constraintName: fk_cart_user
+            referencedTableName: users
+            referencedColumnNames: id
+
+  - changeSet:
+      id: create-cart-items-table
+      author: dev
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: cart_items
+        - tableExists:
+            tableName: carts
+        - tableExists:
+            tableName: products
+      changes:
+        - createTable:
+            tableName: cart_items
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: cart_id
+                  type: UUID
+              - column:
+                  name: product_id
+                  type: UUID
+              - column:
+                  name: quantity
+                  type: INTEGER
+                  defaultValue: 1
+
+        - addForeignKeyConstraint:
+            baseTableName: cart_items
+            baseColumnNames: cart_id
+            constraintName: fk_cart_item_cart
+            referencedTableName: carts
+            referencedColumnNames: id
+
+        - addForeignKeyConstraint:
+            baseTableName: cart_items
+            baseColumnNames: product_id
+            constraintName: fk_cart_item_product
+            referencedTableName: products
+            referencedColumnNames: id
