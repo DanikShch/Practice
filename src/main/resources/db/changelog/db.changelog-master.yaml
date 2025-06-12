@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/versions/1-auth/v1.1__users.yaml
+  - include:
+      file: db/changelog/versions/2-catalog/v2.1__categories.yaml
+  - include:
+      file: db/changelog/versions/2-catalog/v2.2__products.yaml
+  - include:
+      file: db/changelog/versions/2-catalog/v2.3__product_images.yaml
+  - include:
+      file: db/changelog/versions/3-orders/v3.1__carts.yaml
+  - include:
+      file: db/changelog/versions/3-orders/v3.2__orders.yaml
+  - include:
+      file: db/changelog/versions/4-other/v4.1__promocodes.yaml
