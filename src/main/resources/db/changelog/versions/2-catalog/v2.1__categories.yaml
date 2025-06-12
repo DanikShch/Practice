@@ -2,11 +2,6 @@ databaseChangeLog:
   - changeSet:
       id: create-categories-table
       author: dev
-      preConditions:
-        - onFail: MARK_RAN
-        - not:
-            tableExists:
-              tableName: categories
       changes:
         - createTable:
             tableName: categories

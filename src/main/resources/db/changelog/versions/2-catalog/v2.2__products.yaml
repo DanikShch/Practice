@@ -3,10 +3,6 @@ databaseChangeLog:
       id: create-products-table
       author: dev
       preConditions:
-        - onFail: MARK_RAN
-        - not:
-            tableExists:
-              tableName: products
         - tableExists:
             tableName: categories
       changes:

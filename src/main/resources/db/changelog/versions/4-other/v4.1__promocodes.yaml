@@ -2,11 +2,6 @@ databaseChangeLog:
   - changeSet:
       id: create-promocodes-table
       author: dev
-      preConditions:
-        - onFail: MARK_RAN
-        - not:
-            tableExists:
-              tableName: promocodes
       changes:
         - createTable:
             tableName: promocodes

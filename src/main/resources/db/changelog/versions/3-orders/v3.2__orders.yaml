@@ -3,10 +3,6 @@ databaseChangeLog:
       id: create-orders-table
       author: dev
       preConditions:
-        - onFail: MARK_RAN
-        - not:
-            tableExists:
-              tableName: orders
         - tableExists:
             tableName: users
       changes:
@@ -54,10 +50,6 @@ databaseChangeLog:
       id: create-order-items-table
       author: dev
       preConditions:
-        - onFail: MARK_RAN
-        - not:
-            tableExists:
-              tableName: order_items
         - tableExists:
             tableName: orders
         - tableExists:
@@ -105,11 +97,3 @@ databaseChangeLog:
             constraintName: fk_order_item_product
             referencedTableName: products
             referencedColumnNames: id
-
-        - createIndex:
-            indexName: idx_order_items_order
-            tableName: order_items
-            columns:
-              - column:
-                  name: order_id
-                  type: UUID

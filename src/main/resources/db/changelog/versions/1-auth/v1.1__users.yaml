@@ -28,26 +28,12 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: created_at
-                  type: TIMESTAMP
-                  defaultValueComputed: CURRENT_TIMESTAMP
-
-  - changeSet:
-      id: add-user-role-column
-      author: dev
-      preConditions:
-        - onFail: MARK_RAN
-        - tableExists:
-            tableName: users
-        - not:
-            columnExists:
-              tableName: users
-              columnName: role
-      changes:
-        - addColumn:
-            tableName: users
-            columns:
-              - column:
                   name: role
                   type: VARCHAR(20)
                   defaultValue: "CUSTOMER"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
