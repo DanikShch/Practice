@@ -44,7 +44,6 @@ public class AuthService {
 
         userRepository.save(user);
 
-        // Получаем UserDetails для созданного пользователя
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String jwtToken = jwtUtils.generateToken(userDetails);
 
@@ -61,7 +60,6 @@ public class AuthService {
                 )
         );
 
-        // Получаем UserDetails для аутентифицированного пользователя
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
         String jwtToken = jwtUtils.generateToken(userDetails);
 

@@ -75,17 +75,14 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + id));
 
-        // Проверяем, есть ли дочерние категории
         if (!category.getChildren().isEmpty()) {
             throw new IllegalStateException("Cannot delete category with child categories. Delete children first.");
         }
 
-        // Проверяем, есть ли привязанные продукты
         if (!category.getProducts().isEmpty()) {
             throw new IllegalStateException("Cannot delete category with associated products. Move or delete products first.");
         }
 
-        // Если категория была чьей-то дочерней, удаляем связь
         if (category.getParent() != null) {
             category.getParent().getChildren().remove(category);
         }

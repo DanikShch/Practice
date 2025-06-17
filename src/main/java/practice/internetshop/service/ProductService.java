@@ -44,7 +44,6 @@ public class ProductService {
             product.setCategory(categoryService.getCategoryEntityById(productDto.getCategoryId()));
         }
 
-        // Устанавливаем связь продукта с изображениями
         if (product.getImages() != null) {
             product.getImages().forEach(image -> image.setProduct(product));
         }
@@ -65,7 +64,6 @@ public class ProductService {
             existingProduct.setCategory(null);
         }
 
-        // Обновляем изображения
         if (productDto.getImages() != null) {
             existingProduct.getImages().clear();
             productDto.getImages().forEach(dto -> {
@@ -105,7 +103,6 @@ public class ProductService {
                 .toList();
     }
 
-    // Вспомогательный метод для поиска продукта
     private Product findProductById(UUID id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));
