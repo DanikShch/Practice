@@ -1,9 +1,13 @@
 package practice.internetshop.controller;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import practice.internetshop.dto.cart.CartDto;
@@ -20,39 +24,39 @@ public class CartController {
     private final CartService cartService;
 
     @GetMapping
-    public ResponseEntity<CartDto> getCart(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(cartService.getCart(user));
+    public ResponseEntity<CartDto> getCart(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(cartService.getCart(userDetails));
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<CartDto> addToCart(
-            @AuthenticationPrincipal User user,
+    @PostMapping("/items")
+    public ResponseEntity<CartDto> addItem(
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam UUID productId,
-            @RequestParam(defaultValue = "1") @Positive Integer quantity
+            @RequestParam @Min(1) int quantity
     ) {
-        return ResponseEntity.ok(cartService.addToCart(user, productId, quantity));
+        return ResponseEntity.ok(cartService.addItem(userDetails, productId, quantity));
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<CartDto> updateCartItem(
-            @AuthenticationPrincipal User user,
+    @PutMapping("/items")
+    public ResponseEntity<CartDto> updateItem(
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam UUID productId,
-            @RequestParam @Positive Integer quantity
+            @RequestParam @Min(1) int quantity
     ) {
-        return ResponseEntity.ok(cartService.updateCartItem(user, productId, quantity));
+        return ResponseEntity.ok(cartService.updateItemQuantity(userDetails, productId, quantity));
     }
 
-    @DeleteMapping("/remove")
-    public ResponseEntity<CartDto> removeFromCart(
-            @AuthenticationPrincipal User user,
+    @DeleteMapping("/items")
+    public ResponseEntity<CartDto> removeItem(
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam UUID productId
     ) {
-        return ResponseEntity.ok(cartService.removeFromCart(user, productId));
+        return ResponseEntity.ok(cartService.removeItem(userDetails, productId));
     }
 
-    @DeleteMapping("/clear")
-    public ResponseEntity<Void> clearCart(@AuthenticationPrincipal User user) {
-        cartService.clearCart(user);
+    @DeleteMapping
+    public ResponseEntity<Void> clearCart(@AuthenticationPrincipal UserDetails userDetails) {
+        cartService.clearCart(userDetails);
         return ResponseEntity.noContent().build();
     }
 }

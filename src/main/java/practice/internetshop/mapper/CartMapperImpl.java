@@ -6,6 +6,8 @@ import practice.internetshop.dto.cart.CartDto;
 import practice.internetshop.dto.cart.CartItemDto;
 import practice.internetshop.model.Cart;
 import practice.internetshop.model.CartItem;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +31,8 @@ public class CartMapperImpl implements CartMapper {
                     .map(this::toItemDto)
                     .collect(Collectors.toList());
             dto.setItems(items);
+        } else {
+            dto.setItems(Collections.emptyList());
         }
 
         return dto;
