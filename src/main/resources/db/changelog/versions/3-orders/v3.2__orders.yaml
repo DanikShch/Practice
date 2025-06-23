@@ -20,24 +20,34 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: order_date
-                  type: TIMESTAMP
-                  defaultValueComputed: CURRENT_TIMESTAMP
-              - column:
                   name: total_amount
-                  type: DECIMAL(12,2)
+                  type: DECIMAL(19,2)
                   constraints:
                     nullable: false
               - column:
                   name: status
-                  type: VARCHAR(20)
-                  defaultValue: "CREATED"
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
               - column:
-                  name: delivery_address
-                  type: TEXT
+                  name: delivery_method
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
               - column:
                   name: payment_method
                   type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: order_date
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: delivery_address
+                  type: TEXT
+                  constraints:
+                    nullable: false
 
         - addForeignKeyConstraint:
             baseTableName: orders
@@ -51,9 +61,9 @@ databaseChangeLog:
       author: dev
       preConditions:
         - tableExists:
-            tableName: orders
-        - tableExists:
             tableName: products
+        - tableExists:
+            tableName: orders
       changes:
         - createTable:
             tableName: order_items
@@ -80,7 +90,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: unit_price
-                  type: DECIMAL(10,2)
+                  type: DECIMAL(19,2)
                   constraints:
                     nullable: false
 
@@ -97,3 +107,11 @@ databaseChangeLog:
             constraintName: fk_order_item_product
             referencedTableName: products
             referencedColumnNames: id
+
+        - createIndex:
+            indexName: idx_order_items_order
+            tableName: order_items
+            columns:
+              - column:
+                  name: order_id
+                  type: UUID

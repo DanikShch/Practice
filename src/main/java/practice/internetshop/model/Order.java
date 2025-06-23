@@ -33,13 +33,22 @@ public class Order {
     @Column(nullable = false)
     private BigDecimal totalAmount;
 
-    @ColumnDefault("'CREATED'")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status = OrderStatus.CREATED;
 
-    private String deliveryAddress;
-    private String paymentMethod;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "delivery_method", nullable = false)
+    private DeliveryMethod deliveryMethod;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false)
+    private PaymentMethod paymentMethod;
 
     @CreationTimestamp
     @Column(name = "order_date", updatable = false)
     private LocalDateTime orderDate;
+
+    @Column(name = "delivery_address", nullable = false)
+    private String deliveryAddress;
 }
