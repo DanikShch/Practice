@@ -3,6 +3,7 @@ package practice.internetshop.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import practice.internetshop.dto.product.ProductDto;
@@ -10,7 +11,9 @@ import practice.internetshop.mapper.ProductMapper;
 import practice.internetshop.model.Product;
 import practice.internetshop.model.ProductImage;
 import practice.internetshop.repository.ProductRepository;
+import practice.internetshop.repository.specification.ProductSpecifications;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,9 +26,35 @@ public class ProductService {
     private final CategoryService categoryService;
 
     @Transactional(readOnly = true)
-    public List<ProductDto> getAllProducts(String sortBy, String direction) {
+    public List<ProductDto> getFilteredProducts(
+            UUID categoryId,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            Integer minStock,
+            String searchQuery,
+            String sortBy,
+            String direction) {
+
+        Specification<Product> spec = (root, query, cb) -> null;
+
+        if (categoryId != null) {
+            spec = spec.and(ProductSpecifications.byCategory(categoryId));
+        }
+        if (minPrice != null) {
+            spec = spec.and(ProductSpecifications.priceGreaterThanOrEqual(minPrice));
+        }
+        if (maxPrice != null) {
+            spec = spec.and(ProductSpecifications.priceLessThanOrEqual(maxPrice));
+        }
+        if (minStock != null) {
+            spec = spec.and(ProductSpecifications.stockGreaterThanOrEqual(minStock));
+        }
+        if (searchQuery != null && !searchQuery.isEmpty()) {
+            spec = spec.and(ProductSpecifications.nameContains(searchQuery));
+        }
+
         Sort sort = Sort.by(Sort.Direction.fromString(direction), sortBy);
-        return productRepository.findAll(sort)
+        return productRepository.findAll(spec, sort)
                 .stream()
                 .map(productMapper::toDto)
                 .toList();

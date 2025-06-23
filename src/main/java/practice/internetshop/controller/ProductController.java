@@ -7,8 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import practice.internetshop.dto.product.ProductDto;
+import practice.internetshop.dto.product.ProductFilterRequest;
 import practice.internetshop.service.ProductService;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,11 +22,18 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public ResponseEntity<List<ProductDto>> getAllProducts(
-            @RequestParam(defaultValue = "name") String sortBy,
-            @RequestParam(defaultValue = "ASC") String direction
-    ) {
-        return ResponseEntity.ok(productService.getAllProducts(sortBy, direction));
+    public ResponseEntity<List<ProductDto>> getFilteredProducts(
+            @ModelAttribute ProductFilterRequest filterRequest) {
+
+        return ResponseEntity.ok(productService.getFilteredProducts(
+                filterRequest.getCategoryId(),
+                filterRequest.getMinPrice(),
+                filterRequest.getMaxPrice(),
+                filterRequest.getMinStock(),
+                filterRequest.getSearchQuery(),
+                filterRequest.getSortBy(),
+                filterRequest.getDirection()
+        ));
     }
 
     @GetMapping("/{id}")
