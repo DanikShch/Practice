@@ -37,3 +37,23 @@ databaseChangeLog:
                   name: created_at
                   type: TIMESTAMP
                   defaultValueComputed: CURRENT_TIMESTAMP
+  - changeSet:
+      id: add-password-reset-columns
+      author: dev
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: reset_token
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: reset_token_expiry
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true

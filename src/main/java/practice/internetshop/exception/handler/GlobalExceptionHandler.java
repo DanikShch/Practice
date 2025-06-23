@@ -9,10 +9,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import practice.internetshop.dto.error.ErrorResponse;
-import practice.internetshop.exception.PasswordMismatchException;
-import practice.internetshop.exception.UserAlreadyExistsException;
+import practice.internetshop.exception.user.PasswordMismatchException;
+import practice.internetshop.exception.user.UserAlreadyExistsException;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

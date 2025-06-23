@@ -1,4 +1,4 @@
-package practice.internetshop.exception;
+package practice.internetshop.exception.user;
 
 public class PasswordMismatchException extends RuntimeException {
     public PasswordMismatchException(String message) {

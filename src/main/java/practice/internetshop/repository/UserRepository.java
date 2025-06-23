@@ -11,4 +11,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @EntityGraph(attributePaths = {"cart"})
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
+    Optional<User> findByResetToken(String resetToken);
 }
