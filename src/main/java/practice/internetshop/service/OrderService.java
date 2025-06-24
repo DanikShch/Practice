@@ -146,18 +146,13 @@ public class OrderService {
         if (!order.getStatus().canBeCancelled()) {
             throw new IllegalStateException("Order cannot be cancelled in its current status");
         }
-
-        // Возврат товаров на склад
         returnProductsToStock(order);
 
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
-
-        // Отправка уведомления
         emailService.sendOrderCancellation(user.getEmail(), order);
     }
 
-    // Админские методы
     public List<OrderResponseDto> getAllOrders() {
         return orderRepository.findAll().stream()
                 .map(orderMapper::toDto)
@@ -186,7 +181,6 @@ public class OrderService {
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
 
-        // Отправка уведомления
         emailService.sendOrderCancellation(order.getUser().getEmail(), order);
     }
 
@@ -202,7 +196,6 @@ public class OrderService {
         order.setStatus(newStatus);
         Order updatedOrder = orderRepository.save(order);
 
-        // Отправка уведомления при изменении статуса
         if (newStatus.shouldNotifyUser()) {
             emailService.sendOrderStatusUpdate(order.getUser().getEmail(), order);
         }

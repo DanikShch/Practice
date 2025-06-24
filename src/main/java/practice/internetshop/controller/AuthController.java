@@ -42,7 +42,7 @@ public class AuthController {
     }
 
     @PostMapping("/change-password")
-    public ResponseEntity<Void> resetPassword(
+    public ResponseEntity<Void> changePassword(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody @Valid ChangePasswordRequest request) {
         authService.changePassword(userDetails, request);

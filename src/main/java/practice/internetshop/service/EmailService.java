@@ -3,6 +3,7 @@ package practice.internetshop.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -23,9 +24,11 @@ public class EmailService{
     private final Environment env;
     private final TemplateEngine templateEngine;
 
+    @Value("${app.reset-password-url}")
+    private String resetPasswordUrl;
+
     public void sendPasswordResetEmail(String toEmail, String resetToken) {
-        String resetUrl = Objects.requireNonNull(env.getProperty("app.reset-password-url"))
-                .replace("{token}", resetToken);
+        String resetUrl = resetPasswordUrl.replace("{token}", resetToken);
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(env.getProperty("spring.mail.username"));

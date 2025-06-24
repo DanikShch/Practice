@@ -23,7 +23,6 @@ import java.util.UUID;
 public class OrderController {
     private final OrderService orderService;
 
-    // Создание заказа
     @PostMapping
     public ResponseEntity<OrderResponseDto> createOrder(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -33,7 +32,6 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
 
-    // Получение всех заказов пользователя
     @GetMapping("/my")
     public ResponseEntity<List<OrderResponseDto>> getUserOrders(
             @AuthenticationPrincipal UserDetails userDetails
@@ -82,7 +80,6 @@ public class OrderController {
         return ResponseEntity.ok(updatedOrder);
     }
 
-    // Админ: отмена заказа пользователя
     @DeleteMapping("/admin/{orderId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> adminCancelOrder(@PathVariable UUID orderId) {
