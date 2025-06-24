@@ -104,4 +104,27 @@ public class AuthService {
         userRepository.save(user);
         System.out.println("Password reset successfully for user: " + user.getEmail());
     }
+
+    public void changePassword(UserDetails userDetails, ChangePasswordRequest request) {
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new PasswordMismatchException("Passwords do not match");
+        }
+
+        String email = userDetails.getUsername();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidTokenException("Invalid email"));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new PasswordMismatchException("Current password is incorrect");
+        }
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("New password must be different from current password");
+        }
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        System.out.println("Password changed successfully for user: " + user.getEmail());
+        emailService.sendPasswordChangeConfirmation(user.getEmail());
+    }
 }

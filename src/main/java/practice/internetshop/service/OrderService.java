@@ -7,7 +7,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import practice.internetshop.dto.order.OrderRequest;
+import practice.internetshop.dto.order.OrderResponseDto;
 import practice.internetshop.exception.cart.InsufficientStockException;
+import practice.internetshop.exception.user.AccessException;
+import practice.internetshop.exception.user.EmailException;
+import practice.internetshop.exception.user.EmailSendingException;
+import practice.internetshop.mapper.OrderMapper;
 import practice.internetshop.model.*;
 import practice.internetshop.repository.CartRepository;
 import practice.internetshop.repository.OrderRepository;
@@ -17,6 +22,7 @@ import practice.internetshop.repository.UserRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,17 +32,13 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final EmailService emailService;
     private final UserRepository userRepository;
+    private final OrderMapper orderMapper;
 
     @Transactional
-    public Order createOrder(UserDetails userDetails, OrderRequest request) {
-        // Получаем username из UserDetails
+    public OrderResponseDto createOrder(UserDetails userDetails, OrderRequest request) {
         String email = userDetails.getUsername();
-
-        // Находим пользователя по username (или email, в зависимости от вашей реализации)
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + email));
-
-        // Остальная логика остается без изменений
         Cart cart = cartRepository.findByUser(user)
                 .orElseThrow(() -> new EntityNotFoundException("Cart not found"));
 
@@ -58,8 +60,9 @@ public class OrderService {
         cartRepository.save(cart);
 
         emailService.sendOrderConfirmation(user.getEmail(), savedOrder);
+        orderMapper.toDto(order);
 
-        return savedOrder;
+        return orderMapper.toDto(order);
     }
 
     private void validateCart(Cart cart) {
@@ -87,7 +90,6 @@ public class OrderService {
             orderItem.setQuantity(cartItem.getQuantity());
             orderItem.setUnitPrice(cartItem.getProduct().getPrice());
 
-            // Обновление остатка товара
             Product product = cartItem.getProduct();
             product.setStockQuantity(product.getStockQuantity() - cartItem.getQuantity());
             productRepository.save(product);
@@ -100,5 +102,119 @@ public class OrderService {
         return items.stream()
                 .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public List<OrderResponseDto> getUserOrders(UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        List<Order> orders = orderRepository.findByUser(user);
+        return orders.stream()
+                .map(orderMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public OrderResponseDto getUserOrder(UserDetails userDetails, UUID orderId) {
+        String email = userDetails.getUsername();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
+
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new EmailSendingException("You don't have permission to access this order");
+        }
+
+        return orderMapper.toDto(order);
+    }
+
+    @Transactional
+    public void cancelOrder(UserDetails userDetails, UUID orderId) {
+        String email = userDetails.getUsername();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
+
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new AccessException("You can only cancel your own orders");
+        }
+
+        if (!order.getStatus().canBeCancelled()) {
+            throw new IllegalStateException("Order cannot be cancelled in its current status");
+        }
+
+        // Возврат товаров на склад
+        returnProductsToStock(order);
+
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+
+        // Отправка уведомления
+        emailService.sendOrderCancellation(user.getEmail(), order);
+    }
+
+    // Админские методы
+    public List<OrderResponseDto> getAllOrders() {
+        return orderRepository.findAll().stream()
+                .map(orderMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<OrderResponseDto> getOrdersByUser(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        return orderRepository.findByUser(user).stream()
+                .map(orderMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void adminCancelOrder(UUID orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
+
+        if (!order.getStatus().canBeCancelled()) {
+            throw new IllegalStateException("Order cannot be cancelled in its current status");
+        }
+
+        returnProductsToStock(order);
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+
+        // Отправка уведомления
+        emailService.sendOrderCancellation(order.getUser().getEmail(), order);
+    }
+
+    @Transactional
+    public OrderResponseDto updateOrderStatus(UUID orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
+
+        if (!order.getStatus().canTransitionTo(newStatus)) {
+            throw new IllegalStateException("Invalid status transition");
+        }
+
+        order.setStatus(newStatus);
+        Order updatedOrder = orderRepository.save(order);
+
+        // Отправка уведомления при изменении статуса
+        if (newStatus.shouldNotifyUser()) {
+            emailService.sendOrderStatusUpdate(order.getUser().getEmail(), order);
+        }
+
+        return orderMapper.toDto(updatedOrder);
+    }
+
+    private void returnProductsToStock(Order order) {
+        for (OrderItem item : order.getItems()) {
+            Product product = item.getProduct();
+            product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
+            productRepository.save(product);
+        }
     }
 }

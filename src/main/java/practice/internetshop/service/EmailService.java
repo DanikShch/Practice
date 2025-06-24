@@ -56,4 +56,47 @@ public class EmailService{
             throw new EmailException("Failed to send confirmation email", e);
         }
     }
+
+    public void sendOrderCancellation(String email, Order order) {
+        sendEmail(email, "Order Cancellation", "order-cancellation", order);
+    }
+
+    public void sendOrderStatusUpdate(String email, Order order) {
+        sendEmail(email, "Order Status Update", "order-status-update", order);
+    }
+
+    private void sendEmail(String to, String subject, String templateName, Order order) {
+        MimeMessage message = mailSender.createMimeMessage();
+
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject(subject + " #" + order.getId());
+
+            Context context = new Context();
+            context.setVariable("order", order);
+            context.setVariable("items", order.getItems());
+
+            String htmlContent = templateEngine.process(templateName, context);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new EmailException("Failed to send email", e);
+        }
+    }
+
+    public void sendPasswordChangeConfirmation(String email) {
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(email);
+            helper.setSubject("Password Changed Successfully");
+            helper.setText("Your password has been successfully changed.");
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new  EmailException("Failed to send password change confirmation email", e);
+        }
+    }
 }
