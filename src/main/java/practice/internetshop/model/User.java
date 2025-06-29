@@ -49,5 +49,9 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductReview> reviews;
+
+    public enum Role {
+        ADMIN, CUSTOMER
+    }
 }
 

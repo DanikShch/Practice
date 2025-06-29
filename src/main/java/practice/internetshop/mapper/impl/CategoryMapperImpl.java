@@ -1,7 +1,8 @@
-package practice.internetshop.mapper;
+package practice.internetshop.mapper.impl;
 
 import org.springframework.stereotype.Component;
 import practice.internetshop.dto.category.CategoryDto;
+import practice.internetshop.mapper.CategoryMapper;
 import practice.internetshop.model.Category;
 
 @Component

@@ -4,12 +4,12 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import practice.internetshop.dto.cart.CartDto;
 import practice.internetshop.dto.cart.CartItemDto;
 import practice.internetshop.exception.product.ProductNotFoundException;
 import practice.internetshop.exception.cart.CartItemNotFoundException;
 import practice.internetshop.exception.cart.InvalidQuantityException;
-import practice.internetshop.mapper.CartMapper;
 import practice.internetshop.mapper.ProductMapper;
 import practice.internetshop.model.Product;
 import practice.internetshop.repository.ProductRepository;
@@ -22,7 +22,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SessionCartService {
     private final ProductRepository productRepository;
-    private final CartMapper cartMapper;
     private final CartService cartService;
     private final ProductMapper productMapper;
 
@@ -30,6 +29,7 @@ public class SessionCartService {
         return getOrCreateCart(session);
     }
 
+    @Transactional
     public CartDto addItem(HttpSession session, UUID productId, int quantity) {
         validateQuantity(quantity);
         Product product = productRepository.findById(productId)

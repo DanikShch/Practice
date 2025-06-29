@@ -25,12 +25,14 @@ public class CartService {
     private final ProductRepository productRepository;
     private final CartMapper cartMapper;
 
+    @Transactional(readOnly = true)
     public CartDto getCart(UserDetails userDetails) {
         User user = getUser(userDetails);
         loadUserCart(user);
         return cartMapper.toDto(user.getCart());
     }
 
+    @Transactional
     public CartDto addItem(UserDetails userDetails, UUID productId, int quantity) {
         validateQuantity(quantity);
 
@@ -42,6 +44,7 @@ public class CartService {
         return getRefreshedCart(cart);
     }
 
+    @Transactional
     public CartDto updateItemQuantity(UserDetails userDetails, UUID productId, int quantity) {
         validateQuantity(quantity);
 
@@ -54,6 +57,7 @@ public class CartService {
         return getRefreshedCart(cart);
     }
 
+    @Transactional
     public CartDto removeItem(UserDetails userDetails, UUID productId) {
         User user = getUser(userDetails);
         Cart cart = loadUserCart(user);
@@ -61,6 +65,7 @@ public class CartService {
         return cartMapper.toDto(cart);
     }
 
+    @Transactional
     public void clearCart(UserDetails userDetails) {
         User user = getUser(userDetails);
         Cart cart = loadUserCart(user);

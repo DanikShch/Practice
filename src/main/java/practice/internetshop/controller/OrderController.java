@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import practice.internetshop.dto.order.OrderRequest;
 import practice.internetshop.dto.order.OrderResponseDto;
 import practice.internetshop.dto.order.OrderStatusUpdateRequest;
-import practice.internetshop.model.Order;
 import practice.internetshop.service.OrderService;
 
 import java.util.List;

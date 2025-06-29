@@ -1,7 +1,8 @@
-package practice.internetshop.mapper;
+package practice.internetshop.mapper.impl;
 
 import org.springframework.stereotype.Component;
 import practice.internetshop.dto.wishlist.WishlistItemDto;
+import practice.internetshop.mapper.WishlistMapper;
 import practice.internetshop.model.WishlistItem;
 
 @Component

@@ -7,10 +7,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import practice.internetshop.dto.auth.*;
 import practice.internetshop.exception.user.*;
-import practice.internetshop.model.Role;
 import practice.internetshop.model.User;
+import practice.internetshop.model.User.*;
 import practice.internetshop.repository.UserRepository;
 import practice.internetshop.security.JwtUtils;
 import practice.internetshop.security.UserDetailsServiceImpl;
@@ -29,6 +30,7 @@ public class AuthService {
     private final UserDetailsServiceImpl userDetailsService;
     private final EmailService emailService;
 
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserAlreadyExistsException("User with this email already exists");
@@ -54,6 +56,7 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
     public AuthResponse authenticate(AuthRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -70,6 +73,7 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
     public void initiatePasswordReset(PasswordResetRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + request.getEmail()));
@@ -88,6 +92,7 @@ public class AuthService {
         }
     }
 
+    @Transactional
     public void resetPassword(NewPasswordRequest request) {
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new PasswordMismatchException("Passwords do not match");
@@ -107,6 +112,7 @@ public class AuthService {
         System.out.println("Password reset successfully for user: " + user.getEmail());
     }
 
+    @Transactional
     public void changePassword(UserDetails userDetails, ChangePasswordRequest request) {
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new PasswordMismatchException("Passwords do not match");
@@ -130,6 +136,7 @@ public class AuthService {
         emailService.sendPasswordChangeConfirmation(user.getEmail());
     }
 
+    @Transactional(readOnly = true)
     public UUID getCurrentUserId(UserDetails userDetails) {
         User user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new UserNotFoundException(userDetails.getUsername()));

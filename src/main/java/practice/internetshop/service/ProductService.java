@@ -133,6 +133,7 @@ public class ProductService {
                 .toList();
     }
 
+
     private Product findProductById(UUID id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));

@@ -1,9 +1,11 @@
-package practice.internetshop.mapper;
+package practice.internetshop.mapper.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import practice.internetshop.dto.cart.CartDto;
 import practice.internetshop.dto.cart.CartItemDto;
+import practice.internetshop.mapper.CartMapper;
+import practice.internetshop.mapper.ProductMapper;
 import practice.internetshop.model.Cart;
 import practice.internetshop.model.CartItem;
 

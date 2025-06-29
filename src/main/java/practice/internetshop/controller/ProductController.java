@@ -10,7 +10,6 @@ import practice.internetshop.dto.product.ProductDto;
 import practice.internetshop.dto.product.ProductFilterRequest;
 import practice.internetshop.service.ProductService;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 

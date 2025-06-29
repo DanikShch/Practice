@@ -1,12 +1,12 @@
-package practice.internetshop.mapper;
+package practice.internetshop.mapper.impl;
 
 import org.springframework.stereotype.Component;
 import practice.internetshop.dto.product.ProductDto;
 import practice.internetshop.dto.product.ProductImageDto;
+import practice.internetshop.mapper.ProductMapper;
 import practice.internetshop.model.Product;
 import practice.internetshop.model.ProductImage;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Component

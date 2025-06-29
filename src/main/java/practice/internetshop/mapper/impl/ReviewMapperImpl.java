@@ -1,8 +1,9 @@
-package practice.internetshop.mapper;
+package practice.internetshop.mapper.impl;
 
 import org.springframework.stereotype.Component;
 import practice.internetshop.dto.review.ReviewDto;
 import practice.internetshop.dto.review.UpdateReviewRequest;
+import practice.internetshop.mapper.ReviewMapper;
 import practice.internetshop.model.ProductReview;
 import practice.internetshop.model.User;
 

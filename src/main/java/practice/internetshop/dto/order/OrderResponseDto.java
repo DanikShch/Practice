@@ -2,8 +2,6 @@ package practice.internetshop.dto.order;
 
 import lombok.Data;
 import practice.internetshop.model.Order.*;
-import practice.internetshop.model.OrderStatus;
-import practice.internetshop.model.PaymentMethod;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

@@ -61,4 +61,35 @@ public class Order {
     public enum DeliveryMethod {
         STANDARD, EXPRESS, PICKUP
     }
+
+    public enum PaymentMethod {
+        CREDIT_CARD, PAYPAL, CASH_ON_DELIVERY
+    }
+
+    public enum OrderStatus {
+        CREATED,
+        CONFIRMED,
+        PROCESSING,
+        SHIPPED,
+        DELIVERED,
+        CANCELLED;
+
+        public boolean canBeCancelled() {
+            return this == CREATED || this == CONFIRMED;
+        }
+
+        public boolean canTransitionTo(OrderStatus newStatus) {
+            return switch (this) {
+                case CREATED -> newStatus == CONFIRMED || newStatus == CANCELLED;
+                case CONFIRMED -> newStatus == PROCESSING || newStatus == CANCELLED;
+                case PROCESSING -> newStatus == SHIPPED;
+                case SHIPPED -> newStatus == DELIVERED;
+                default -> false;
+            };
+        }
+
+        public boolean shouldNotifyUser() {
+            return this == SHIPPED || this == DELIVERED;
+        }
+    }
 }

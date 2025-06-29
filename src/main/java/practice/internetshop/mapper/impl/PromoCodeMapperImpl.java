@@ -1,7 +1,8 @@
-package practice.internetshop.mapper;
+package practice.internetshop.mapper.impl;
 
 import org.springframework.stereotype.Component;
 import practice.internetshop.dto.promo.PromoCodeDto;
+import practice.internetshop.mapper.PromoCodeMapper;
 import practice.internetshop.model.PromoCode;
 
 import java.math.BigDecimal;

@@ -1,10 +1,12 @@
-package practice.internetshop.mapper;
+package practice.internetshop.mapper.impl;
 
 import org.springframework.stereotype.Component;
 import practice.internetshop.dto.order.OrderItemDto;
 import practice.internetshop.dto.order.OrderRequest;
 import practice.internetshop.dto.order.OrderResponseDto;
+import practice.internetshop.mapper.OrderMapper;
 import practice.internetshop.model.*;
+import practice.internetshop.model.Order.*;
 
 import java.math.BigDecimal;
 import java.util.List;

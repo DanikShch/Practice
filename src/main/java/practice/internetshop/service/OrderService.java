@@ -1,11 +1,11 @@
 package practice.internetshop.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import practice.internetshop.dto.order.OrderRequest;
 import practice.internetshop.dto.order.OrderResponseDto;
 import practice.internetshop.exception.cart.InsufficientStockException;
@@ -17,6 +17,7 @@ import practice.internetshop.exception.user.EmailSendingException;
 import practice.internetshop.mapper.OrderMapper;
 import practice.internetshop.mapper.PromoCodeMapper;
 import practice.internetshop.model.*;
+import practice.internetshop.model.Order.*;
 import practice.internetshop.repository.*;
 
 import java.math.BigDecimal;
@@ -109,6 +110,7 @@ public class OrderService {
         });
     }
 
+    @Transactional(readOnly = true)
     public List<OrderResponseDto> getUserOrders(UserDetails userDetails) {
         String email = userDetails.getUsername();
         User user = userRepository.findByEmail(email)
@@ -120,6 +122,7 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public OrderResponseDto getUserOrder(UserDetails userDetails, UUID orderId) {
         String email = userDetails.getUsername();
         User user = userRepository.findByEmail(email)
@@ -158,12 +161,14 @@ public class OrderService {
         emailService.sendOrderCancellation(user.getEmail(), order);
     }
 
+    @Transactional(readOnly = true)
     public List<OrderResponseDto> getAllOrders() {
         return orderRepository.findAll().stream()
                 .map(orderMapper::toDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<OrderResponseDto> getOrdersByUser(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
