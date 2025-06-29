@@ -3,7 +3,7 @@ package practice.internetshop.dto.order;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import practice.internetshop.model.DeliveryMethod;
+import practice.internetshop.model.Order.*;
 import practice.internetshop.model.PaymentMethod;
 
 @Data
@@ -16,4 +16,6 @@ public class OrderRequest {
 
     @NotBlank
     public String deliveryAddress;
+
+    private String promoCode;
 }

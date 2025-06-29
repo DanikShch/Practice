@@ -115,3 +115,16 @@ databaseChangeLog:
               - column:
                   name: order_id
                   type: UUID
+  - changeSet:
+      id: alter-orders-table-for-promo
+      author: dev
+      changes:
+        - addColumn:
+            tableName: orders
+            columns:
+              - column:
+                  name: original_amount
+                  type: DECIMAL(19,2)
+              - column:
+                  name: applied_promo_code
+                  type: VARCHAR(50)

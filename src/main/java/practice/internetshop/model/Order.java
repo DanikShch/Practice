@@ -33,6 +33,12 @@ public class Order {
     @Column(nullable = false)
     private BigDecimal totalAmount;
 
+    @Column(name = "original_amount", precision = 19, scale = 2)
+    private BigDecimal originalAmount;
+
+    @Column(name = "applied_promo_code", length = 50)
+    private String appliedPromoCode;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status = OrderStatus.CREATED;
@@ -51,4 +57,8 @@ public class Order {
 
     @Column(name = "delivery_address", nullable = false)
     private String deliveryAddress;
+
+    public enum DeliveryMethod {
+        STANDARD, EXPRESS, PICKUP
+    }
 }

@@ -23,6 +23,9 @@ public class OrderMapperImpl implements OrderMapper {
         dto.setId(order.getId());
         dto.setOrderDate(order.getOrderDate());
         dto.setTotalAmount(order.getTotalAmount());
+        dto.setOriginalAmount(order.getOriginalAmount());
+        dto.setAppliedPromoCode(order.getAppliedPromoCode());
+        dto.setDiscountAmount(calculateDiscount(order));
         dto.setStatus(order.getStatus());
         dto.setDeliveryAddress(order.getDeliveryAddress());
         dto.setPaymentMethod(order.getPaymentMethod());
@@ -40,6 +43,14 @@ public class OrderMapperImpl implements OrderMapper {
         }
 
         return dto;
+    }
+
+    @Override
+    public BigDecimal calculateDiscount(Order order) {
+        if (order == null || order.getOriginalAmount() == null || order.getTotalAmount() == null) {
+            return BigDecimal.ZERO;
+        }
+        return order.getOriginalAmount().subtract(order.getTotalAmount());
     }
 
     @Override

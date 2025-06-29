@@ -18,4 +18,5 @@ public interface OrderMapper {
     OrderItem toOrderItem(CartItem cartItem, Order order);
     List<OrderItem> toOrderItems(List<CartItem> cartItems, Order order);
     BigDecimal calculateTotal(List<OrderItem> items);
+    BigDecimal calculateDiscount(Order order);
 }

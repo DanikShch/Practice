@@ -9,15 +9,15 @@ import org.springframework.stereotype.Service;
 import practice.internetshop.dto.order.OrderRequest;
 import practice.internetshop.dto.order.OrderResponseDto;
 import practice.internetshop.exception.cart.InsufficientStockException;
+import practice.internetshop.exception.promo.PromoCodeInvalidException;
+import practice.internetshop.exception.promo.PromoCodeNotFoundException;
 import practice.internetshop.exception.user.AccessException;
 import practice.internetshop.exception.user.EmailException;
 import practice.internetshop.exception.user.EmailSendingException;
 import practice.internetshop.mapper.OrderMapper;
+import practice.internetshop.mapper.PromoCodeMapper;
 import practice.internetshop.model.*;
-import practice.internetshop.repository.CartRepository;
-import practice.internetshop.repository.OrderRepository;
-import practice.internetshop.repository.ProductRepository;
-import practice.internetshop.repository.UserRepository;
+import practice.internetshop.repository.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -33,6 +33,8 @@ public class OrderService {
     private final EmailService emailService;
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
+    private final PromoCodeRepository promoCodeRepository;
+    private final PromoCodeMapper promoCodeMapper;
 
     @Transactional
     public OrderResponseDto createOrder(UserDetails userDetails, OrderRequest request) {
@@ -43,14 +45,37 @@ public class OrderService {
                 .orElseThrow(() -> new EntityNotFoundException("Cart not found"));
 
         validateCart(cart);
-
         Order order = orderMapper.toEntity(request, user);
         List<OrderItem> orderItems = orderMapper.toOrderItems(cart.getItems(), order);
 
         updateProductStocks(orderItems);
 
         order.setItems(orderItems);
-        order.setTotalAmount(orderMapper.calculateTotal(orderItems));
+        BigDecimal originalAmount = orderMapper.calculateTotal(orderItems);
+        order.setOriginalAmount(originalAmount);
+
+        if (request.getPromoCode() != null && !request.getPromoCode().isEmpty()) {
+            try {
+                PromoCode promoCode = promoCodeRepository.findByCode(request.getPromoCode())
+                        .orElseThrow(() -> new PromoCodeNotFoundException(request.getPromoCode()));
+
+                if (!promoCode.isValid()) {
+                    throw new PromoCodeInvalidException(request.getPromoCode());
+                }
+
+                BigDecimal discount = promoCodeMapper.calculateDiscount(promoCode, originalAmount);
+                BigDecimal totalAmount = originalAmount.subtract(discount);
+
+                order.setTotalAmount(totalAmount);
+                order.setAppliedPromoCode(request.getPromoCode());
+                promoCode.incrementUsage();
+                promoCodeRepository.save(promoCode);
+            } catch (PromoCodeNotFoundException | PromoCodeInvalidException e) {
+                order.setTotalAmount(originalAmount);
+            }
+        } else {
+            order.setTotalAmount(originalAmount);
+        }
 
         Order savedOrder = orderRepository.save(order);
         cart.getItems().clear();

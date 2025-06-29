@@ -1,4 +1,4 @@
-package practice.internetshop.exception;
+package practice.internetshop.exception.product;
 
 import java.util.UUID;
 

@@ -1,13 +1,12 @@
 package practice.internetshop.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import practice.internetshop.dto.cart.CartDto;
-import practice.internetshop.exception.ProductNotFoundException;
+import practice.internetshop.exception.product.ProductNotFoundException;
 import practice.internetshop.exception.cart.CartItemNotFoundException;
 import practice.internetshop.exception.cart.InvalidQuantityException;
 import practice.internetshop.mapper.CartMapper;
