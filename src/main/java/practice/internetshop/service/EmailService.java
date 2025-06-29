@@ -21,22 +21,26 @@ import java.util.Objects;
 public class EmailService{
 
     private final JavaMailSender mailSender;
-    private final Environment env;
     private final TemplateEngine templateEngine;
 
     @Value("${app.reset-password-url}")
     private String resetPasswordUrl;
 
+    @Value("${spring.mail.username}")
+    private String mailUsername;
+
     public void sendPasswordResetEmail(String toEmail, String resetToken) {
-        String resetUrl = resetPasswordUrl.replace("{token}", resetToken);
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(env.getProperty("spring.mail.username"));
-        message.setTo(toEmail);
-        message.setSubject("Password Reset Request");
-        message.setText("To reset your password, click the link below:\n" + resetUrl);
-
-        mailSender.send(message);
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom(mailUsername);
+            helper.setTo(toEmail);
+            helper.setSubject("Password Reset Request");
+            helper.setText("To reset your password, click: " + resetPasswordUrl.replace("{token}", resetToken));
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new EmailException("Failed to send email", e);
+        }
     }
 
     public void sendOrderConfirmation(String to, Order order) {

@@ -1,5 +1,6 @@
 package practice.internetshop.controller;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import practice.internetshop.dto.auth.*;
 import practice.internetshop.service.AuthService;
+import practice.internetshop.service.SessionCartService;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -18,6 +20,7 @@ import practice.internetshop.service.AuthService;
 public class AuthController {
 
     private final AuthService authService;
+    private final SessionCartService sessionCartService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody @Valid RegisterRequest request) {
@@ -25,8 +28,14 @@ public class AuthController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthResponse> authenticate(@RequestBody @Valid AuthRequest request) {
-        return ResponseEntity.ok(authService.authenticate(request));
+    public ResponseEntity<AuthResponse> authenticate(
+            @RequestBody @Valid AuthRequest request,
+            HttpSession session) {
+        AuthResponse response = authService.authenticate(request);
+
+        sessionCartService.mergeToUserCart(session, response.getUserDetails());
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/forgot-password")

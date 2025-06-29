@@ -61,7 +61,7 @@ databaseChangeLog:
               - column:
                   name: quantity
                   type: INTEGER
-                  defaultValue: 1
+                  defaultValue: "1"
                   constraints:
                     nullable: false
 
@@ -86,3 +86,17 @@ databaseChangeLog:
               - column:
                   name: cart_id
                   type: UUID
+  - changeSet:
+      id: alter-carts-table-for-guest
+      author: dev
+      changes:
+        - addColumn:
+            tableName: carts
+            columns:
+              - column:
+                  name: guest_id
+                  type: UUID
+        - dropNotNullConstraint:
+            tableName: carts
+            columnName: user_id
+            columnDataType: UUID
