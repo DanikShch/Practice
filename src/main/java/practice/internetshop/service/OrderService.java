@@ -44,25 +44,28 @@ public class OrderService {
 
         validateCart(cart);
 
-        Order order = new Order();
-        order.setUser(user);
-        order.setDeliveryMethod(request.getDeliveryMethod());
-        order.setPaymentMethod(request.getPaymentMethod());
-        order.setDeliveryAddress(request.getDeliveryAddress());
+        Order order = orderMapper.toEntity(request, user);
+        List<OrderItem> orderItems = orderMapper.toOrderItems(cart.getItems(), order);
 
-        List<OrderItem> orderItems = convertCartItemsToOrderItems(cart, order);
+        updateProductStocks(orderItems);
+
         order.setItems(orderItems);
-        order.setTotalAmount(calculateTotal(orderItems));
+        order.setTotalAmount(orderMapper.calculateTotal(orderItems));
 
         Order savedOrder = orderRepository.save(order);
-
         cart.getItems().clear();
         cartRepository.save(cart);
 
         emailService.sendOrderConfirmation(user.getEmail(), savedOrder);
-        orderMapper.toDto(order);
+        return orderMapper.toDto(savedOrder);
+    }
 
-        return orderMapper.toDto(order);
+    private void updateProductStocks(List<OrderItem> orderItems) {
+        orderItems.forEach(item -> {
+            Product product = item.getProduct();
+            product.setStockQuantity(product.getStockQuantity() - item.getQuantity());
+            productRepository.save(product);
+        });
     }
 
     private void validateCart(Cart cart) {
@@ -79,29 +82,6 @@ public class OrderService {
                 );
             }
         });
-    }
-
-
-    private List<OrderItem> convertCartItemsToOrderItems(Cart cart, Order order) {
-        return cart.getItems().stream().map(cartItem -> {
-            OrderItem orderItem = new OrderItem();
-            orderItem.setOrder(order);
-            orderItem.setProduct(cartItem.getProduct());
-            orderItem.setQuantity(cartItem.getQuantity());
-            orderItem.setUnitPrice(cartItem.getProduct().getPrice());
-
-            Product product = cartItem.getProduct();
-            product.setStockQuantity(product.getStockQuantity() - cartItem.getQuantity());
-            productRepository.save(product);
-
-            return orderItem;
-        }).toList();
-    }
-
-    private BigDecimal calculateTotal(List<OrderItem> items) {
-        return items.stream()
-                .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public List<OrderResponseDto> getUserOrders(UserDetails userDetails) {

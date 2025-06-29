@@ -13,7 +13,6 @@ public enum OrderStatus {
     }
 
     public boolean canTransitionTo(OrderStatus newStatus) {
-        // Простые правила перехода статусов
         return switch (this) {
             case CREATED -> newStatus == CONFIRMED || newStatus == CANCELLED;
             case CONFIRMED -> newStatus == PROCESSING || newStatus == CANCELLED;
