@@ -23,7 +23,7 @@ public class ProductReviewController {
 
     private final ProductReviewService reviewService;
     private final AuthService authService;
-    
+
     @PostMapping
     public ResponseEntity<ReviewDto> createReview(
             @RequestParam UUID productId,
@@ -33,43 +33,43 @@ public class ProductReviewController {
         UUID userId = authService.getCurrentUserId(userDetails);
         return ResponseEntity.ok(reviewService.createReview(productId, userId, request));
     }
-
+    
     @GetMapping
     public ResponseEntity<List<ReviewDto>> getAllReviews() {
         return ResponseEntity.ok(reviewService.getAllReviews());
     }
-
+    
     @GetMapping("/by-product")
     public ResponseEntity<List<ReviewDto>> getReviewsByProduct(
             @RequestParam UUID productId) {
         return ResponseEntity.ok(reviewService.getProductReviews(productId));
     }
-
+    
     @GetMapping("/by-user")
     public ResponseEntity<List<ReviewDto>> getReviewsByUser(
             @RequestParam UUID userId) {
         return ResponseEntity.ok(reviewService.getUserReviews(userId));
     }
-
+    
     @GetMapping("/my-reviews")
     public ResponseEntity<List<ReviewDto>> getMyReviews(
             @AuthenticationPrincipal UserDetails userDetails) {
         UUID userId = authService.getCurrentUserId(userDetails);
         return ResponseEntity.ok(reviewService.getUserReviews(userId));
     }
-
+    
     @GetMapping("/stats")
     public ResponseEntity<ProductRatingStats> getProductRatingStats(
             @RequestParam UUID productId) {
         return ResponseEntity.ok(reviewService.getProductRatingStats(productId));
     }
-
+    
     @GetMapping("/{reviewId}")
     public ResponseEntity<ReviewDto> getReview(
             @PathVariable UUID reviewId) {
         return ResponseEntity.ok(reviewService.getReviewById(reviewId));
     }
-
+    
     @PutMapping("/{reviewId}")
     public ResponseEntity<ReviewDto> updateReview(
             @PathVariable UUID reviewId,
@@ -79,7 +79,7 @@ public class ProductReviewController {
         UUID userId = authService.getCurrentUserId(userDetails);
         return ResponseEntity.ok(reviewService.updateReview(reviewId, userId, request));
     }
-
+    
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<Void> deleteReview(
             @PathVariable UUID reviewId,
