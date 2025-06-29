@@ -59,14 +59,16 @@ public class OrderController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
+    @GetMapping("/user")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OrderResponseDto>> getAllOrders(
-            @RequestParam(required = false) UUID userId
-    ) {
-        if (userId != null) {
-            return ResponseEntity.ok(orderService.getOrdersByUser(userId));
-        }
+            @RequestParam UUID userId) {
+        return ResponseEntity.ok(orderService.getOrdersByUser(userId));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<OrderResponseDto>> getAllOrders() {
         return ResponseEntity.ok(orderService.getAllOrders());
     }
 

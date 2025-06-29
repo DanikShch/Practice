@@ -31,5 +31,7 @@ public class ProductDto {
     private UUID categoryId;
 
     private List<ProductImageDto> images;
+
+
 }
 

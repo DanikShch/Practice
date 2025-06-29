@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import practice.internetshop.model.Product;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -18,4 +19,5 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     List<Product> findByCategoryId(UUID categoryId);
     @EntityGraph(attributePaths = {"images"})
     List<Product> findByNameContainingIgnoreCase(String name);
+
 }

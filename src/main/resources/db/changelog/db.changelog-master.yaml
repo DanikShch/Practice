@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/versions/3-orders/v3.2__orders.yaml
   - include:
       file: db/changelog/versions/4-other/v4.1__promocodes.yaml
+  - include:
+      file: db/changelog/versions/4-other/v4.2__product-reviews.yaml

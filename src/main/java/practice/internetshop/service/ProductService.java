@@ -7,6 +7,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import practice.internetshop.dto.product.ProductDto;
+import practice.internetshop.exception.product.ProductNotFoundException;
 import practice.internetshop.mapper.ProductMapper;
 import practice.internetshop.model.Product;
 import practice.internetshop.model.ProductImage;
@@ -136,4 +137,5 @@ public class ProductService {
         return productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));
     }
+
 }

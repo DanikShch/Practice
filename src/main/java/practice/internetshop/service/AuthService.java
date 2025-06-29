@@ -129,4 +129,10 @@ public class AuthService {
         System.out.println("Password changed successfully for user: " + user.getEmail());
         emailService.sendPasswordChangeConfirmation(user.getEmail());
     }
+
+    public UUID getCurrentUserId(UserDetails userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new UserNotFoundException(userDetails.getUsername()));
+        return user.getId();
+    }
 }
