@@ -39,6 +39,18 @@ public class ProductMapperImpl implements ProductMapper {
             dto.setCategoryId(entity.getCategory().getId());
         }
 
+        if (entity.getImages() != null && !entity.getImages().isEmpty()) {
+            dto.setImages(entity.getImages().stream()
+                    .map(this::toImageDto)
+                    .collect(Collectors.toList()));
+        }
+        return dto;
+    }
+
+    private ProductImageDto toImageDto(ProductImage image) {
+        ProductImageDto dto = new ProductImageDto();
+        dto.setImageUrl(image.getImageUrl());
+        dto.setIsPrimary(image.getIsPrimary());
         return dto;
     }
 
