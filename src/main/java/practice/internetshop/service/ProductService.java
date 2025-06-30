@@ -139,4 +139,11 @@ public class ProductService {
                 .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));
     }
 
+    @Transactional(readOnly = true)
+    public List<ProductDto> getAllProducts() {
+        return productRepository.findAll()
+                .stream()
+                .map(productMapper::toDto)
+                .toList();
+    }
 }

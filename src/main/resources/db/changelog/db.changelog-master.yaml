@@ -8,6 +8,8 @@ databaseChangeLog:
   - include:
       file: db/changelog/versions/2-catalog/v2.3__product_images.yaml
   - include:
+      file: db/changelog/versions/2-catalog/v2.4__wishlist.yaml
+  - include:
       file: db/changelog/versions/3-orders/v3.1__carts.yaml
   - include:
       file: db/changelog/versions/3-orders/v3.2__orders.yaml

@@ -1,6 +1,7 @@
 package practice.internetshop.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,6 +30,8 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserDetailsServiceImpl userDetailsService;
     private final EmailService emailService;
+    @Value("${admin.email}")
+    private String adminEmail;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -45,7 +48,9 @@ public class AuthService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(Role.CUSTOMER)
                 .build();
-
+        if(user.getEmail().equals(adminEmail)) {
+            user.setRole(Role.ADMIN);
+        }
         userRepository.save(user);
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());

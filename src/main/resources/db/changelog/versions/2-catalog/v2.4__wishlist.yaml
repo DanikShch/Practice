@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-wishlist-table
+      author: dev
+      changes:
+        - createTable:
+            tableName: wishlist_items
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_wishlist_user
+                    references: users(id)
+              - column:
+                  name: product_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_wishlist_product
+                    references: products(id)
+              - column:
+                  name: added_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+        - addUniqueConstraint:
+            tableName: wishlist_items
+            columnNames: user_id, product_id
+            constraintName: uk_wishlist_user_product
