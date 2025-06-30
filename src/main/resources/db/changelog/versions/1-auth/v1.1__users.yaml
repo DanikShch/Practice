@@ -57,3 +57,28 @@ databaseChangeLog:
                   type: TIMESTAMP
                   constraints:
                     nullable: true
+  - changeSet:
+      id: drop-reset-token-columns
+      author: dev
+      preConditions:
+        - onFail: MARK_RAN
+        - columnExists:
+            tableName: users
+            columnName: reset_token
+      changes:
+        - dropColumn:
+            tableName: users
+            columnName: reset_token
+
+  - changeSet:
+      id: drop-reset-token-expiry-column
+      author: dev
+      preConditions:
+        - onFail: MARK_RAN
+        - columnExists:
+            tableName: users
+            columnName: reset_token_expiry
+      changes:
+        - dropColumn:
+            tableName: users
+            columnName: reset_token_expiry

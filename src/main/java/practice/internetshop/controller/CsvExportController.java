@@ -20,38 +20,38 @@ public class CsvExportController {
     private final CsvExportService csvExportService;
 
     @GetMapping("/products")
-    public void exportProducts(HttpServletResponse response) throws IOException {
+    public void exportProducts(HttpServletResponse response){
         csvExportService.exportAllProductsToCsv(response);
     }
 
     @GetMapping("/orders")
-    public void exportOrders(HttpServletResponse response) throws IOException {
+    public void exportOrders(HttpServletResponse response){
         csvExportService.exportAllOrdersToCsv(response);
     }
 
     @GetMapping("/promo")
-    public void exportPromoCodes(HttpServletResponse response) throws IOException {
+    public void exportPromoCodes(HttpServletResponse response){
         csvExportService.exportAllPromoCodesToCsv(response);
     }
 
     @GetMapping("/reviews")
-    public void exportReviews(HttpServletResponse response) throws IOException {
+    public void exportReviews(HttpServletResponse response){
         csvExportService.exportAllReviewsToCsv(response);
     }
 
     @GetMapping("/reviews/{productId}")
-    public void exportProductReviews(@PathVariable UUID productId, HttpServletResponse response) throws IOException {
+    public void exportProductReviews(@PathVariable UUID productId, HttpServletResponse response){
         csvExportService.exportProductReviewsToCsv(productId, response);
     }
 
     @GetMapping("/users")
-    public void exportAllUsers(HttpServletResponse response) throws IOException {
+    public void exportAllUsers(HttpServletResponse response){
         csvExportService.exportAllUsersToCsv(response);
     }
 
     @GetMapping("/users/{role}")
     public void exportUsersByRole(@PathVariable User.Role role,
-            HttpServletResponse response) throws IOException {
+            HttpServletResponse response){
         csvExportService.exportUsersByRoleToCsv(role, response);
     }
 

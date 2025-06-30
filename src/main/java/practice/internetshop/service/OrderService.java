@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static practice.internetshop.model.Order.OrderStatus.*;
+
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -151,7 +153,7 @@ public class OrderService {
             throw new AccessException("You can only cancel your own orders");
         }
 
-        if (!order.getStatus().canBeCancelled()) {
+        if (!canBeCancelled(order.getStatus())) {
             throw new IllegalStateException("Order cannot be cancelled in its current status");
         }
         returnProductsToStock(order);
@@ -183,7 +185,7 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
 
-        if (!order.getStatus().canBeCancelled()) {
+        if (!canBeCancelled(order.getStatus())) {
             throw new IllegalStateException("Order cannot be cancelled in its current status");
         }
 
@@ -199,14 +201,14 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
 
-        if (!order.getStatus().canTransitionTo(newStatus)) {
+        if (!canTransitionTo(order.getStatus(), newStatus)) {
             throw new IllegalStateException("Invalid status transition");
         }
 
         order.setStatus(newStatus);
         Order updatedOrder = orderRepository.save(order);
 
-        if (newStatus.shouldNotifyUser()) {
+        if (shouldNotifyUser(newStatus)) {
             emailService.sendOrderStatusUpdate(order.getUser().getEmail(), order);
         }
 
@@ -219,5 +221,23 @@ public class OrderService {
             product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
             productRepository.save(product);
         }
+    }
+
+    private boolean canBeCancelled(Order.OrderStatus status) {
+        return status == CREATED || status == CONFIRMED;
+    }
+
+    private boolean canTransitionTo(Order.OrderStatus status, OrderStatus newStatus) {
+        return switch (status) {
+            case CREATED -> newStatus == CONFIRMED || newStatus == CANCELLED;
+            case CONFIRMED -> newStatus == PROCESSING || newStatus == CANCELLED;
+            case PROCESSING -> newStatus == SHIPPED;
+            case SHIPPED -> newStatus == DELIVERED;
+            default -> false;
+        };
+    }
+
+    private boolean shouldNotifyUser(Order.OrderStatus status) {
+        return status == SHIPPED || status == DELIVERED;
     }
 }

@@ -22,8 +22,43 @@ public class JwtUtils {
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
-    private long expiration;
+    @Value("${jwt.access_token.expiration}")
+    private long accessTokenExpiration;
+
+    @Value("${jwt.refresh_token.expiration}")
+    private long refreshTokenExpiration;
+
+    @Value("${jwt.reset_token.expiration}")
+    private long resetTokenExpiration;
+
+    public String generatePasswordResetToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + resetTokenExpiration))
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey())
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean validatePasswordResetToken(String token) {
+        return validateToken(token);
+    }
+
+    public String extractEmailFromResetToken(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -34,13 +69,10 @@ public class JwtUtils {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
-    }
-
-    public String generateToken(
+    private String buildToken(
             Map<String, Object> extraClaims,
-            UserDetails userDetails
+            UserDetails userDetails,
+            long expiration
     ) {
         return Jwts
                 .builder()
@@ -51,6 +83,15 @@ public class JwtUtils {
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
+    public String generateAccessToken(UserDetails userDetails) {
+        return buildToken(new HashMap<>(), userDetails, accessTokenExpiration);
+    }
+
+    public String generateRefreshToken(UserDetails userDetails) {
+        return buildToken(new HashMap<>(), userDetails, refreshTokenExpiration);
+    }
+
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);

@@ -23,16 +23,8 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<List<ProductDto>> getFilteredProducts(
             @ModelAttribute ProductFilterRequest filterRequest) {
-
-        return ResponseEntity.ok(productService.getFilteredProducts(
-                filterRequest.getCategoryId(),
-                filterRequest.getMinPrice(),
-                filterRequest.getMaxPrice(),
-                filterRequest.getMinStock(),
-                filterRequest.getSearchQuery(),
-                filterRequest.getSortBy(),
-                filterRequest.getDirection()
-        ));
+        List<ProductDto> products = productService.getFilteredProducts(filterRequest);
+        return ResponseEntity.ok(products);
     }
 
     @GetMapping("/all")

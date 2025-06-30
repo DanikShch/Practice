@@ -14,5 +14,4 @@ public class UserDto {
     private LocalDateTime createdAt;
     private Integer ordersCount;
     private Integer reviewsCount;
-    private boolean hasActiveResetToken;
 }

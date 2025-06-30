@@ -3,6 +3,7 @@ package practice.internetshop.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +34,8 @@ public class ProductReviewController {
         UUID userId = authService.getCurrentUserId(userDetails);
         return ResponseEntity.ok(reviewService.createReview(productId, userId, request));
     }
-    
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<ReviewDto>> getAllReviews() {
         return ResponseEntity.ok(reviewService.getAllReviews());
@@ -44,7 +46,8 @@ public class ProductReviewController {
             @RequestParam UUID productId) {
         return ResponseEntity.ok(reviewService.getProductReviews(productId));
     }
-    
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/by-user")
     public ResponseEntity<List<ReviewDto>> getReviewsByUser(
             @RequestParam UUID userId) {

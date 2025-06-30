@@ -12,7 +12,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthResponse {
-    private String token;
+    private String accessToken;
+    private String refreshToken;
     @JsonIgnore
     private UserDetails userDetails;
 }

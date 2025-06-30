@@ -11,6 +11,7 @@ import practice.internetshop.dto.product.ProductImageDto;
 import practice.internetshop.dto.promo.PromoCodeDto;
 import practice.internetshop.dto.review.ReviewDto;
 import practice.internetshop.dto.user.UserDto;
+import practice.internetshop.exception.export.CsvExportException;
 import practice.internetshop.model.Product;
 import practice.internetshop.model.User;
 
@@ -32,40 +33,88 @@ public class CsvExportService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String EMPTY_VALUE = "";
 
-    public void exportAllProductsToCsv(HttpServletResponse response) throws IOException {
-        List<ProductDto> products = productService.getAllProducts();
-        writeProductsToCsv(products, response);
+    public void exportAllProductsToCsv(HttpServletResponse response) {
+        try {
+            List<ProductDto> products = productService.getAllProducts();
+            writeProductsToCsv(products, response);
+        } catch (Exception e) {
+            throw new CsvExportException("Failed to export products", e);
+        }
     }
 
-    private void writeProductsToCsv(List<ProductDto> products, HttpServletResponse response) throws IOException {
-        response.setContentType("text/csv");
-        response.setCharacterEncoding("UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"products_export.csv\"");
+    private void writeProductsToCsv(List<ProductDto> products, HttpServletResponse response)  {
+        try {
+            response.setContentType("text/csv");
+            response.setCharacterEncoding("UTF-8");
+            response.setHeader("Content-Disposition", "attachment; filename=\"products_export.csv\"");
 
-        try (CSVWriter writer = new CSVWriter(response.getWriter())) {
-            writer.writeNext(new String[]{
-                    "ID",
-                    "Название",
-                    "Описание",
-                    "Цена",
-                    "Количество на складе",
-                    "ID категории",
-                    "Основное изображение",
-                    "Количество изображений"
-            });
-
-            for (ProductDto product : products) {
+            try (CSVWriter writer = new CSVWriter(response.getWriter())) {
                 writer.writeNext(new String[]{
-                        product.getId().toString(),
-                        escapeCsvSpecialChars(product.getName()),
-                        escapeCsvSpecialChars(product.getDescription()),
-                        product.getPrice().toString(),
-                        product.getStockQuantity().toString(),
-                        product.getCategoryId() != null ? product.getCategoryId().toString() : "",
-                        getPrimaryImageUrl(product),
-                        String.valueOf(product.getImages() != null ? product.getImages().size() : 0)
+                        "ID", "Name", "Description", "Price",
+                        "Stock quantity", "Category ID",
+                        "Primary image", "Image count"
                 });
+
+                for (ProductDto product : products) {
+                    writer.writeNext(new String[]{
+                            safeToString(product.getId()),
+                            escapeCsvSpecialChars(product.getName()),
+                            escapeCsvSpecialChars(product.getDescription()),
+                            safeBigDecimalToString(product.getPrice()),
+                            safeIntegerToString(product.getStockQuantity()),
+                            safeToString(product.getCategoryId()),
+                            getPrimaryImageUrl(product),
+                            safeIntegerToString(product.getImages() != null ? product.getImages().size() : 0)
+                    });
+                }
             }
+        } catch (IOException e) {
+            throw new CsvExportException("Error writing products CSV", e);
+        }
+    }
+
+    public void exportAllOrdersToCsv(HttpServletResponse response) {
+        try {
+            List<OrderResponseDto> orders = orderService.getAllOrders();
+            writeOrdersToCsv(orders, response);
+        } catch (Exception e) {
+            throw new CsvExportException("Failed to export orders", e);
+        }
+    }
+
+    private void writeOrdersToCsv(List<OrderResponseDto> orders, HttpServletResponse response) {
+        try {
+            response.setContentType("text/csv");
+            response.setCharacterEncoding("UTF-8");
+            response.setHeader("Content-Disposition", "attachment; filename=\"orders_export.csv\"");
+
+            try (CSVWriter writer = new CSVWriter(response.getWriter())) {
+                writer.writeNext(new String[]{
+                        "Order ID", "Order Date", "User Email", "Status",
+                        "Original Amount", "Discount Amount", "Total Amount",
+                        "Promo Code", "Payment Method", "Delivery Method",
+                        "Delivery Address", "Product Items"
+                });
+
+                for (OrderResponseDto order : orders) {
+                    writer.writeNext(new String[]{
+                            safeToString(order.getId()),
+                            formatDateTime(order.getOrderDate()),
+                            safeToString(order.getUserEmail()),
+                            safeToString(order.getStatus()),
+                            safeBigDecimalToString(order.getOriginalAmount()),
+                            safeBigDecimalToString(order.getDiscountAmount()),
+                            safeBigDecimalToString(order.getTotalAmount()),
+                            safeToString(order.getAppliedPromoCode()),
+                            safeToString(order.getPaymentMethod()),
+                            safeToString(order.getDeliveryMethod()),
+                            safeToString(order.getDeliveryAddress()),
+                            formatOrderItems(order.getItems())
+                    });
+                }
+            }
+        } catch (IOException e) {
+            throw new CsvExportException("Error writing orders CSV", e);
         }
     }
 
@@ -87,50 +136,6 @@ public class CsvExportService {
                 .replace("\r", "");
     }
 
-    public void exportAllOrdersToCsv(HttpServletResponse response) throws IOException {
-        List<OrderResponseDto> orders = orderService.getAllOrders();
-        writeOrdersToCsv(orders, response);
-    }
-
-    private void writeOrdersToCsv(List<OrderResponseDto> orders, HttpServletResponse response) throws IOException {
-        response.setContentType("text/csv");
-        response.setCharacterEncoding("UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"orders_export.csv\"");
-
-        try (CSVWriter writer = new CSVWriter(response.getWriter())) {
-            writer.writeNext(new String[]{
-                    "Order ID",
-                    "Order Date",
-                    "User Email",
-                    "Status",
-                    "Original Amount",
-                    "Discount Amount",
-                    "Total Amount",
-                    "Promo Code",
-                    "Payment Method",
-                    "Delivery Method",
-                    "Delivery Address",
-                    "Product Items"
-            });
-
-            for (OrderResponseDto order : orders) {
-                writer.writeNext(new String[]{
-                        safeToString(order.getId()),
-                        order.getOrderDate() != null ? order.getOrderDate().format(DATE_FORMATTER) : EMPTY_VALUE,
-                        safeToString(order.getUserEmail()),
-                        order.getStatus() != null ? order.getStatus().name() : EMPTY_VALUE,
-                        safeBigDecimalToString(order.getOriginalAmount()),
-                        safeBigDecimalToString(order.getDiscountAmount()),
-                        safeBigDecimalToString(order.getTotalAmount()),
-                        safeToString(order.getAppliedPromoCode()),
-                        order.getPaymentMethod() != null ? order.getPaymentMethod().name() : EMPTY_VALUE,
-                        order.getDeliveryMethod() != null ? order.getDeliveryMethod().name() : EMPTY_VALUE,
-                        safeToString(order.getDeliveryAddress()),
-                        formatOrderItems(order.getItems())
-                });
-            }
-        }
-    }
 
     private String formatOrderItems(List<OrderItemDto> items) {
         if (items == null || items.isEmpty()) {
@@ -152,127 +157,153 @@ public class CsvExportService {
         return sb.toString().trim();
     }
 
-    public void exportAllPromoCodesToCsv(HttpServletResponse response) throws IOException {
-        List<PromoCodeDto> promoCodes = promoCodeService.getAllPromoCodes();
-        writePromoCodesToCsv(promoCodes, response);
-    }
-
-    private void writePromoCodesToCsv(List<PromoCodeDto> promoCodes, HttpServletResponse response) throws IOException {
-        response.setContentType("text/csv");
-        response.setCharacterEncoding("UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"promocodes_export.csv\"");
-
-        try (CSVWriter writer = new CSVWriter(response.getWriter())) {
-            writer.writeNext(new String[]{
-                    "ID",
-                    "Promo Code",
-                    "Discount Value",
-                    "Discount Type",
-                    "Expiry Date",
-                    "Is Active",
-                    "Usage Limit",
-                    "Times Used",
-                    "Description",
-                    "Created At"
-            });
-
-            for (PromoCodeDto promoCode : promoCodes) {
-                writer.writeNext(new String[]{
-                        safeToString(promoCode.getId()),
-                        escapeCsvSpecialChars(promoCode.getCode()),
-                        safeBigDecimalToString(promoCode.getDiscountValue()),
-                        promoCode.getDiscountType() != null ? promoCode.getDiscountType().name() : EMPTY_VALUE,
-                        promoCode.getExpiryDate() != null ? promoCode.getExpiryDate().format(DATE_FORMATTER) : EMPTY_VALUE,
-                        safeBooleanToString(promoCode.getIsActive()),
-                        safeIntegerToString(promoCode.getUsageLimit()),
-                        safeIntegerToString(promoCode.getTimesUsed()),
-                        escapeCsvSpecialChars(promoCode.getDescription()),
-                        promoCode.getCreatedAt() != null ? promoCode.getCreatedAt().format(DATE_FORMATTER) : EMPTY_VALUE
-                });
-            }
+    public void exportAllPromoCodesToCsv(HttpServletResponse response) {
+        try {
+            List<PromoCodeDto> promoCodes = promoCodeService.getAllPromoCodes();
+            writePromoCodesToCsv(promoCodes, response);
+        } catch (Exception e) {
+            throw new CsvExportException("Failed to export promo codes", e);
         }
     }
 
-    public void exportAllReviewsToCsv(HttpServletResponse response) throws IOException {
-        List<ReviewDto> reviews = reviewService.getAllReviews();
-        writeReviewsToCsv(reviews, response);
-    }
+    private void writePromoCodesToCsv(List<PromoCodeDto> promoCodes, HttpServletResponse response) {
+        try {
+            response.setContentType("text/csv");
+            response.setCharacterEncoding("UTF-8");
+            response.setHeader("Content-Disposition", "attachment; filename=\"promocodes_export.csv\"");
 
-    public void exportProductReviewsToCsv(UUID productId, HttpServletResponse response) throws IOException {
-        List<ReviewDto> reviews = reviewService.getProductReviews(productId);
-        writeReviewsToCsv(reviews, response);
-    }
-
-    private void writeReviewsToCsv(List<ReviewDto> reviews, HttpServletResponse response) throws IOException {
-        response.setContentType("text/csv");
-        response.setCharacterEncoding("UTF-8");
-        response.setHeader("Content-Disposition",
-                "attachment; filename=\"reviews_export.csv\"");
-
-        try (CSVWriter writer = new CSVWriter(response.getWriter())) {
-            writer.writeNext(new String[]{
-                    "Review ID",
-                    "Product ID",
-                    "User ID",
-                    "User Name",
-                    "Rating",
-                    "Comment",
-                    "Created At",
-                    "Updated At"
-            });
-
-            for (ReviewDto review : reviews) {
+            try (CSVWriter writer = new CSVWriter(response.getWriter())) {
                 writer.writeNext(new String[]{
-                        safeToString(review.getId()),
-                        safeToString(review.getProductId()),
-                        safeToString(review.getUserId()),
-                        escapeCsvSpecialChars(review.getUserDisplayName()),
-                        safeRatingToString(review.getRating()),
-                        escapeCsvSpecialChars(review.getComment()),
-                        formatDateTime(review.getCreatedAt()),
-                        formatDateTime(review.getUpdatedAt())
+                        "ID",
+                        "Promo Code",
+                        "Discount Value",
+                        "Discount Type",
+                        "Expiry Date",
+                        "Is Active",
+                        "Usage Limit",
+                        "Times Used",
+                        "Description",
+                        "Created At"
                 });
+
+                for (PromoCodeDto promoCode : promoCodes) {
+                    writer.writeNext(new String[]{
+                            safeToString(promoCode.getId()),
+                            escapeCsvSpecialChars(promoCode.getCode()),
+                            safeBigDecimalToString(promoCode.getDiscountValue()),
+                            promoCode.getDiscountType() != null ? promoCode.getDiscountType().name() : EMPTY_VALUE,
+                            promoCode.getExpiryDate() != null ? promoCode.getExpiryDate().format(DATE_FORMATTER) : EMPTY_VALUE,
+                            safeBooleanToString(promoCode.getIsActive()),
+                            safeIntegerToString(promoCode.getUsageLimit()),
+                            safeIntegerToString(promoCode.getTimesUsed()),
+                            escapeCsvSpecialChars(promoCode.getDescription()),
+                            promoCode.getCreatedAt() != null ? promoCode.getCreatedAt().format(DATE_FORMATTER) : EMPTY_VALUE
+                    });
+                }
             }
+        } catch (IOException e) {
+            throw new CsvExportException("Error writing promo codes CSV", e);
         }
     }
 
-    public void exportAllUsersToCsv(HttpServletResponse response) throws IOException {
-        List<UserDto> users = userService.getAllUsers();
-        writeUsersToCsv(users, response);
+    public void exportAllReviewsToCsv(HttpServletResponse response) {
+        try {
+            List<ReviewDto> reviews = reviewService.getAllReviews();
+            writeReviewsToCsv(reviews, response);
+        } catch (Exception e) {
+            throw new CsvExportException("Failed to export reviews", e);
+        }
     }
 
-    public void exportUsersByRoleToCsv(User.Role role, HttpServletResponse response) throws IOException {
-        List<UserDto> users = userService.getUsersByRole(role);
-        writeUsersToCsv(users, response);
+    public void exportProductReviewsToCsv(UUID productId, HttpServletResponse response) {
+        try {
+            List<ReviewDto> reviews = reviewService.getProductReviews(productId);
+            writeReviewsToCsv(reviews, response);
+        } catch (Exception e) {
+            throw new CsvExportException("Failed to export product reviews", e);
+        }
     }
 
-    private void writeUsersToCsv(List<UserDto> users, HttpServletResponse response) throws IOException {
-        response.setContentType("text/csv");
-        response.setCharacterEncoding("UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"users_export.csv\"");
+    private void writeReviewsToCsv(List<ReviewDto> reviews, HttpServletResponse response) {
+        try {
+            response.setContentType("text/csv");
+            response.setCharacterEncoding("UTF-8");
+            response.setHeader("Content-Disposition", "attachment; filename=\"reviews_export.csv\"");
 
-        try (CSVWriter writer = new CSVWriter(response.getWriter())) {
-            writer.writeNext(new String[]{
-                    "User ID",
-                    "Email",
-                    "Role",
-                    "Created At",
-                    "Orders Count",
-                    "Reviews Count",
-                    "Has Active Reset Token"
-            });
-
-            for (UserDto user : users) {
+            try (CSVWriter writer = new CSVWriter(response.getWriter())) {
                 writer.writeNext(new String[]{
-                        safeToString(user.getId()),
-                        escapeCsvSpecialChars(user.getEmail()),
-                        user.getRole() != null ? user.getRole().name() : EMPTY_VALUE,
-                        user.getCreatedAt() != null ? user.getCreatedAt().format(DATE_FORMATTER) : EMPTY_VALUE,
-                        safeIntegerToString(user.getOrdersCount()),
-                        safeIntegerToString(user.getReviewsCount()),
-                        String.valueOf(user.isHasActiveResetToken())
+                        "Review ID",
+                        "Product ID",
+                        "User ID",
+                        "User Name",
+                        "Rating",
+                        "Comment",
+                        "Created At",
+                        "Updated At"
                 });
+
+                for (ReviewDto review : reviews) {
+                    writer.writeNext(new String[]{
+                            safeToString(review.getId()),
+                            safeToString(review.getProductId()),
+                            safeToString(review.getUserId()),
+                            escapeCsvSpecialChars(review.getUserDisplayName()),
+                            safeRatingToString(review.getRating()),
+                            escapeCsvSpecialChars(review.getComment()),
+                            formatDateTime(review.getCreatedAt()),
+                            formatDateTime(review.getUpdatedAt())
+                    });
+                }
             }
+        } catch (IOException e) {
+            throw new CsvExportException("Error writing reviews CSV", e);
+        }
+    }
+
+
+    public void exportUsersByRoleToCsv(User.Role role, HttpServletResponse response){
+        try {
+            List<UserDto> users = userService.getUsersByRole(role);
+            writeUsersToCsv(users, response);
+        } catch (Exception e) {
+            throw new CsvExportException("Failed to export users", e);
+        }
+    }
+
+    public void exportAllUsersToCsv(HttpServletResponse response) {
+        try {
+            List<UserDto> users = userService.getAllUsers();
+            writeUsersToCsv(users, response);
+        } catch (Exception e) {
+            throw new CsvExportException("Failed to export users", e);
+        }
+    }
+
+    private void writeUsersToCsv(List<UserDto> users, HttpServletResponse response) {
+        try {
+            response.setContentType("text/csv");
+            response.setCharacterEncoding("UTF-8");
+            response.setHeader("Content-Disposition", "attachment; filename=\"users_export.csv\"");
+
+            try (CSVWriter writer = new CSVWriter(response.getWriter())) {
+                writer.writeNext(new String[]{
+                        "User ID", "Email", "Role", "Created At",
+                        "Orders Count", "Reviews Count"
+                });
+
+                for (UserDto user : users) {
+                    writer.writeNext(new String[]{
+                            safeToString(user.getId()),
+                            escapeCsvSpecialChars(user.getEmail()),
+                            safeToString(user.getRole()),
+                            formatDateTime(user.getCreatedAt()),
+                            safeIntegerToString(user.getOrdersCount()),
+                            safeIntegerToString(user.getReviewsCount()),
+                    });
+                }
+            }
+        } catch (IOException e) {
+            throw new CsvExportException("Error writing users CSV", e);
         }
     }
 

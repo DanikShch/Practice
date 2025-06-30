@@ -54,10 +54,12 @@ public class AuthService {
         userRepository.save(user);
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
-        String jwtToken = jwtUtils.generateToken(userDetails);
+        String accessToken = jwtUtils.generateAccessToken(userDetails);
+        String refreshToken = jwtUtils.generateRefreshToken(userDetails);
 
         return AuthResponse.builder()
-                .token(jwtToken)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 
@@ -70,10 +72,12 @@ public class AuthService {
                 )
         );
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String jwtToken = jwtUtils.generateToken(userDetails);
+        String accessToken = jwtUtils.generateAccessToken(userDetails);
+        String refreshToken = jwtUtils.generateRefreshToken(userDetails);
 
         return AuthResponse.builder()
-                .token(jwtToken)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .userDetails(userDetails)
                 .build();
     }
@@ -83,18 +87,33 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + request.getEmail()));
 
-        String resetToken = UUID.randomUUID().toString();
-        user.setResetToken(resetToken);
-        user.setResetTokenExpiry(LocalDateTime.now().plusHours(24));
-        userRepository.save(user);
+        String resetToken = jwtUtils.generatePasswordResetToken(user.getEmail());
 
         try {
             emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
-            System.out.printf("Password reset email sent to " + user.getEmail());
+            System.out.println("Password reset email sent to " + user.getEmail());
         } catch (Exception e) {
-            System.out.println("Failed to send password reset email to " +  user.getEmail() + ", " + e);
+            System.out.println("Failed to send password reset email to " + user.getEmail() + ", " + e);
             throw new EmailSendingException("Failed to send password reset email");
         }
+    }
+
+    @Transactional
+    public AuthResponse refreshToken(String refreshToken) {
+        if (!jwtUtils.validateToken(refreshToken)) {
+            throw new InvalidTokenException("Invalid refresh token");
+        }
+
+        String username = jwtUtils.extractUsername(refreshToken);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+        String newAccessToken = jwtUtils.generateAccessToken(userDetails);
+        String newRefreshToken = jwtUtils.generateRefreshToken(userDetails);
+
+        return AuthResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .build();
     }
 
     @Transactional
@@ -103,16 +122,15 @@ public class AuthService {
             throw new PasswordMismatchException("Passwords do not match");
         }
 
-        User user = userRepository.findByResetToken(request.getToken())
-                .orElseThrow(() -> new InvalidTokenException("Invalid password reset token"));
-
-        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
-            throw new TokenExpiredException("Password reset token has expired");
+        if (!jwtUtils.validatePasswordResetToken(request.getToken())) {
+            throw new InvalidTokenException("Invalid or expired password reset token");
         }
 
+        String email = jwtUtils.extractEmailFromResetToken(request.getToken());
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
-        user.setResetToken(null);
-        user.setResetTokenExpiry(null);
         userRepository.save(user);
         System.out.println("Password reset successfully for user: " + user.getEmail());
     }
@@ -133,8 +151,6 @@ public class AuthService {
         if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("New password must be different from current password");
         }
-        user.setResetToken(null);
-        user.setResetTokenExpiry(null);
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
         System.out.println("Password changed successfully for user: " + user.getEmail());

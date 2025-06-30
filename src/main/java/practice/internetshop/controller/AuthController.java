@@ -32,9 +32,7 @@ public class AuthController {
             @RequestBody @Valid AuthRequest request,
             HttpSession session) {
         AuthResponse response = authService.authenticate(request);
-
         sessionCartService.mergeToUserCart(session, response.getUserDetails());
-
         return ResponseEntity.ok(response);
     }
 
@@ -56,5 +54,10 @@ public class AuthController {
             @RequestBody @Valid ChangePasswordRequest request) {
         authService.changePassword(userDetails, request);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<AuthResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refreshToken(request.getRefreshToken()));
     }
 }

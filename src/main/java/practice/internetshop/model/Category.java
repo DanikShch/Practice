@@ -37,25 +37,4 @@ public class Category {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    // Вспомогательные методы для двунаправленных связей
-    public void addChildCategory(Category child) {
-        children.add(child);
-        child.setParent(this);
-    }
-
-    public void removeChildCategory(Category child) {
-        children.remove(child);
-        child.setParent(null);
-    }
-
-    public void addProduct(Product product) {
-        products.add(product);
-        product.setCategory(this);
-    }
-
-    public void removeProduct(Product product) {
-        products.remove(product);
-        product.setCategory(null);
-    }
 }

@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/wishlist/**").authenticated()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/promo-codes/**").hasRole("ADMIN")
+                        .requestMatchers("/api/export/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

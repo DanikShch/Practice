@@ -7,14 +7,13 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import practice.internetshop.dto.product.ProductDto;
-import practice.internetshop.exception.product.ProductNotFoundException;
+import practice.internetshop.dto.product.ProductFilterRequest;
 import practice.internetshop.mapper.ProductMapper;
 import practice.internetshop.model.Product;
 import practice.internetshop.model.ProductImage;
 import practice.internetshop.repository.ProductRepository;
 import practice.internetshop.repository.specification.ProductSpecifications;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,34 +26,10 @@ public class ProductService {
     private final CategoryService categoryService;
 
     @Transactional(readOnly = true)
-    public List<ProductDto> getFilteredProducts(
-            UUID categoryId,
-            BigDecimal minPrice,
-            BigDecimal maxPrice,
-            Integer minStock,
-            String searchQuery,
-            String sortBy,
-            String direction) {
+    public List<ProductDto> getFilteredProducts(ProductFilterRequest filter) {
+        Specification<Product> spec = buildSpecification(filter);
+        Sort sort = buildSort(filter);
 
-        Specification<Product> spec = (root, query, cb) -> null;
-
-        if (categoryId != null) {
-            spec = spec.and(ProductSpecifications.byCategory(categoryId));
-        }
-        if (minPrice != null) {
-            spec = spec.and(ProductSpecifications.priceGreaterThanOrEqual(minPrice));
-        }
-        if (maxPrice != null) {
-            spec = spec.and(ProductSpecifications.priceLessThanOrEqual(maxPrice));
-        }
-        if (minStock != null) {
-            spec = spec.and(ProductSpecifications.stockGreaterThanOrEqual(minStock));
-        }
-        if (searchQuery != null && !searchQuery.isEmpty()) {
-            spec = spec.and(ProductSpecifications.nameContains(searchQuery));
-        }
-
-        Sort sort = Sort.by(Sort.Direction.fromString(direction), sortBy);
         return productRepository.findAll(spec, sort)
                 .stream()
                 .map(productMapper::toDto)
@@ -74,8 +49,14 @@ public class ProductService {
             product.setCategory(categoryService.getCategoryEntityById(productDto.getCategoryId()));
         }
 
-        if (product.getImages() != null) {
-            product.getImages().forEach(image -> image.setProduct(product));
+        if (productDto.getImages() != null) {
+            productDto.getImages().forEach(dto -> {
+                ProductImage image = new ProductImage();
+                image.setImageUrl(dto.getImageUrl());
+                image.setIsPrimary(dto.getIsPrimary());
+                image.setProduct(product);
+                product.getImages().add(image);
+            });
         }
 
         Product savedProduct = productRepository.save(product);
@@ -145,5 +126,21 @@ public class ProductService {
                 .stream()
                 .map(productMapper::toDto)
                 .toList();
+    }
+
+    private Specification<Product> buildSpecification(ProductFilterRequest filter) {
+        return ProductSpecifications.initial()
+                .and(ProductSpecifications.byCategory(filter.getCategoryId()))
+                .and(ProductSpecifications.priceGreaterThanOrEqual(filter.getMinPrice()))
+                .and(ProductSpecifications.priceLessThanOrEqual(filter.getMaxPrice()))
+                .and(ProductSpecifications.stockGreaterThanOrEqual(filter.getMinStock()))
+                .and(ProductSpecifications.nameContains(filter.getSearchQuery()));
+    }
+
+    private Sort buildSort(ProductFilterRequest filter) {
+        String sortField = filter.getSortBy() != null ? filter.getSortBy() : "name";
+        Sort.Direction direction = filter.getDirection() != null ?
+                filter.getDirection() : Sort.Direction.ASC;
+        return Sort.by(direction, sortField);
     }
 }
